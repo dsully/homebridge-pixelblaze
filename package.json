@@ -27,6 +27,7 @@
     "homebridge-plugin"
   ],
   "dependencies": {
+    "@types/ws": "^7.4.0",
     "lodash": "^4.17.19",
     "ws": "^7.3.1"
   },
@@ -47,5 +48,8 @@
     "tabWidth": 2,
     "semi": true,
     "arrowParens": "always"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.3"
   }
 }

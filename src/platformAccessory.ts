@@ -1,34 +1,26 @@
 import { Service, PlatformAccessory, CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback } from 'homebridge';
-
-import { PixelBlazePlatform } from './platform';
+import PixelBlazeController from './lib/controller';
+import PixelBlazePlatform from './platform';
 
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class PixelBlazePlatformAccessory {
+export default class PixelBlazePlatformAccessory {
   private service: Service;
-
-  /**
-   * These are just used to create a working example
-   * You should implement your own code to track the state of your accessory
-   */
-  private exampleStates = {
-    On: false,
-    Brightness: 100,
-  };
+  private refresh = 5.0;
+  private hasAccessoryInfo;
 
   constructor(
     private readonly platform: PixelBlazePlatform,
     private readonly accessory: PlatformAccessory,
+    private device: PixelBlazeController,
   ) {
 
-    // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Electromage')
-      .setCharacteristic(this.platform.Characteristic.Model, 'Default-Model')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial');
+      .setCharacteristic(this.platform.Characteristic.Model, 'PixelBlaze');
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
@@ -42,14 +34,35 @@ export class PixelBlazePlatformAccessory {
     // see https://developers.homebridge.io/#/service/Lightbulb
 
     // register handlers for the On/Off Characteristic
-    this.service.getCharacteristic(this.platform.Characteristic.On)
-      .on('set', this.setOn.bind(this))                // SET - bind to the `setOn` method below
-      .on('get', this.getOn.bind(this));               // GET - bind to the `getOn` method below
+    // SET - bind to the `setOn` method below
+    this.service.getCharacteristic(this.platform.Characteristic.On).on('set', this.setOn.bind(this));
 
     // register handlers for the Brightness Characteristic
     this.service.getCharacteristic(this.platform.Characteristic.Brightness)
       .on('set', this.setBrightness.bind(this));       // SET - bind to the 'setBrightness` method below
 
+
+    setInterval(() => {
+      this.device.reload();
+      this.service.updateCharacteristic(this.platform.Characteristic.On, parseFloat(this.device.props.brightness) > 0.0);
+    }, this.refresh * 1000);
+
+    // Update the serial number asynchronously, as we may not have it upon accessory creation.
+    this.hasAccessoryInfo = setInterval(() => {
+
+      if (this.device.props && this.device.props.name) {
+        const serial = this.device.props.name.split('_')[1];
+
+        this.platform.log.debug(`Found serial: ${serial} and firmware: ${this.device.props.ver}`);
+
+        this.accessory.getService(this.platform.Service.AccessoryInformation)!
+          .setCharacteristic(this.platform.Characteristic.SerialNumber, serial)
+          .setCharacteristic(this.platform.Characteristic.FirmwareRevision, this.device.props.ver);
+
+        clearInterval(this.hasAccessoryInfo);
+      }
+
+    }, this.refresh * 1000);
   }
 
   /**
@@ -58,39 +71,24 @@ export class PixelBlazePlatformAccessory {
    */
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
 
-    // implement your own code to turn your device on/off
-    this.exampleStates.On = value as boolean;
-
+    this.device.setCommand({brightness: value ? 1.0 : 0.0 });
     this.platform.log.debug('Set Characteristic On ->', value);
 
-    // you must call the callback function
     callback(null);
   }
 
   /**
-   * Handle the "GET" requests from HomeKit
-   * These are sent when HomeKit wants to know the current state of the accessory, for example, checking if a Light bulb is on.
-   *
-   * GET requests should return as fast as possbile. A long delay here will result in
-   * HomeKit being unresponsive and a bad user experience in general.
-   *
-   * If your device takes time to respond you should update the status of your device
-   * asynchronously instead using the `updateCharacteristic` method instead.
-
-   * @example
-   * this.service.updateCharacteristic(this.platform.Characteristic.On, true)
+   * Handle "SET" requests from HomeKit
+   * These are sent when the user changes the state of an accessory, for example, changing the Brightness
    */
-  getOn(callback: CharacteristicGetCallback) {
+  setBrightness(value: CharacteristicValue, callback: CharacteristicSetCallback) {
 
-    // implement your own code to check if the device is on
-    const isOn = this.exampleStates.On;
+    this.device.setCommand({brightness: (value as number) / 100});
 
-    this.platform.log.debug('Get Characteristic On ->', isOn);
+    this.platform.log.debug('Set Characteristic Brightness -> ', value);
 
     // you must call the callback function
-    // the first argument should be null if there were no errors
-    // the second argument should be the value to return
-    callback(null, isOn);
+    callback(null);
   }
 
   /**

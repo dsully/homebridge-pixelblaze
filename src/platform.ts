@@ -1,16 +1,17 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { PixelBlazePlatformAccessory } from './platformAccessory';
-import { PixelBlazeController } from './lib/controller';
-import { discover } from './lib/discovery';
+import PixelBlazePlatformAccessory from './platformAccessory';
+import PixelBlazeController from './lib/controller';
+import discover from './lib/discovery';
+import Characteristics from './characteristics';
 
 /**
  * HomebridgePlatform
  * This class is the main constructor for your plugin, this is where you should
  * parse the user config and discover/register accessories with Homebridge.
  */
-export class PixelBlazePlatform implements DynamicPlatformPlugin {
+export default class PixelBlazePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
 
@@ -72,7 +73,7 @@ export class PixelBlazePlatform implements DynamicPlatformPlugin {
 
       // create the accessory handler for the restored accessory
       // this is imported from `platformAccessory.ts`
-      new PixelBlazePlatformAccessory(this, existingAccessory);
+      new PixelBlazePlatformAccessory(this, existingAccessory, controller);
 
       // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
       // remove platform accessories when no longer present
@@ -91,7 +92,7 @@ export class PixelBlazePlatform implements DynamicPlatformPlugin {
 
       // create the accessory handler for the newly create accessory
       // this is imported from `platformAccessory.ts`
-      new PixelBlazePlatformAccessory(this, accessory);
+      new PixelBlazePlatformAccessory(this, accessory, controller);
 
       // link the accessory to your platform
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

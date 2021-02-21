@@ -1,4 +1,4 @@
-import { PixelBlazeController } from './controller';
+import PixelBlazeController from './controller';
 
 import type { Logger } from 'homebridge';
 import * as udp from 'dgram';
@@ -15,7 +15,7 @@ const PacketTypes = {
  * @param log 
  * @param foundControllerCallback
  */
-export function discover(log: Logger, foundControllerCallback: (controller: PixelBlazeController) => void) {
+export default function discover(log: Logger, foundControllerCallback: (controller: PixelBlazeController) => void) {
 
   const discoveryFunction = () => {
 
@@ -43,17 +43,17 @@ export function discover(log: Logger, foundControllerCallback: (controller: Pixe
       };
 
       const now = new Date().getTime();
-      const now32 = now % 0xffffffff; //32 bits of milliseconds
+      const now32 = now % 0xffffffff; // 32 bits of milliseconds
 
       switch (header.packetType) {
         case PacketTypes.BEACONPACKET: {
 
-          log.debug(
-            'BEACONPACKET from ' + remote.address + ':' + remote.port + ' id: ' + header.senderId +
-            ' senderTime: ' + header.senderTime + ' delta: ' + (now32 - header.senderTime),
-          );
+          // log.debug(
+          //   'BEACONPACKET from ' + remote.address + ':' + remote.port + ' id: ' + header.senderId +
+          //  ' senderTime: ' + header.senderTime + ' delta: ' + (now32 - header.senderTime),
+          // );
 
-          //record this discovery and fire up a controller
+          // Record this device and fire up a controller.
           const record = (discoveries[header.senderId] =
           discoveries[header.senderId] || {});
           record.lastSeen = now;
@@ -62,10 +62,13 @@ export function discover(log: Logger, foundControllerCallback: (controller: Pixe
 
           if (!record.controller) {
 
-            record.controller = new PixelBlazeController(log, {
+            record.controller = new PixelBlazeController({
               id: header.senderId,
               address: remote.address,
-            });
+            }, log);
+
+            // Start the WebSocket connection, which will fetch the current state/config.
+            record.controller.start();
 
             clearInterval(broadcastIntervalId);
             foundControllerCallback(record.controller);

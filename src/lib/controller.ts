@@ -1,6 +1,6 @@
 import type { Logger } from 'homebridge';
 
-import { WebSocket } from 'ws';
+import WebSocket = require('ws');
 import * as _ from 'lodash';
 
 const PacketType = {
@@ -36,19 +36,19 @@ const PROPFIELDS = [
   'name',
 ];
 
-export class PixelBlazeController {
+export default class PixelBlazeController {
   private log: Logger;
   private command;
   private partialList = [];
   private lastSeen = 0;
   private reconnectTimeout;
-  private ws: WebSocket;
+  private client: WebSocket | undefined;
 
   public readonly props;
 
-  constructor(log: Logger, props) {
+  constructor(props, log: Logger) {
     this.log = log;
-    this.props = props;
+    this.props = props || {};
     this.command = {};
   }
 
@@ -58,35 +58,38 @@ export class PixelBlazeController {
 
   stop() {
     try {
-      if (this.ws) {
-        this.ws.terminate();
+      if (this.client) {
+        this.client.terminate();
       }
     } catch (err) {
-      // dont care!
+      // pass
     }
     clearTimeout(this.reconnectTimeout);
   }
 
   connect() {
-    if (this.ws && this.ws.readyState === this.ws.CONNECTING) {
+    if (this.client && this.client.readyState === WebSocket.CONNECTING) {
       return;
     }
 
     this.stop();
-    this.ws = new WebSocket('ws://' + this.props.address + ':81');
-    this.ws.binaryType = 'arraybuffer';
-    this.ws.on('open', this.handleConnect);
-    this.ws.on('close', () => this.handleClose);
-    this.ws.on('message', this.handleMessage);
-    this.ws.on('pong', this.handlePong);
-    this.ws.on('error', this.log); //otherwise it crashes :(
+    this.client = new WebSocket(`ws://${this.props.address}:81`);
+    this.client.binaryType = 'arraybuffer';
+    this.client.on('open', this.handleConnect.bind(this));
+    this.client.on('close', () => this.handleClose.bind(this));
+    this.client.on('message', this.handleMessage.bind(this));
+    this.client.on('pong', this.handlePong.bind(this));
+    this.client.on('error', this.log.error);
   }
 
   handleConnect() {
-    this.log.debug('connected to ' + this.props.address);
+    // this.log.debug(`connected to ${this.props.address}`);
 
     this.lastSeen = new Date().getTime();
     clearTimeout(this.reconnectTimeout);
+
+    // console.log(`In handleConnect: ${this.constructor['name']}`);
+    // console.log(`In handleConnect: ${this.sendFrame}`);
 
     this.sendFrame({
       getConfig: true,
@@ -97,17 +100,18 @@ export class PixelBlazeController {
   }
 
   handleClose() {
-    this.log.debug('closing ' + this.props.address);
+    // this.log.debug('closing ' + this.props.address);
     this.reconnectTimeout = setTimeout(this.connect, 1000);
   }
 
   handleMessage(msg: ArrayBufferLike) {
     this.lastSeen = new Date().getTime();
-    // console.log("data from " + this.props.id + " at " + this.props.address, typeof msg, msg);
 
     const props = this.props;
 
     if (typeof msg === 'string') {
+
+      this.log.debug(`data from ${this.props.id} at ${this.props.address}`, typeof msg, msg);
 
       try {
         _.assign(this.props, _.pick(JSON.parse(msg), PROPFIELDS));
@@ -154,7 +158,7 @@ export class PixelBlazeController {
 
           if (flags & PacketFrameFlags.END) {
             props.programList = this.partialList;
-            // console.log("received programs", props.id, props.programList);
+            // this.log.debug("received programs", props.id, props.programList);
           }
           break;
         }
@@ -163,15 +167,15 @@ export class PixelBlazeController {
   }
 
   ping() {
-    const isDisconnected = this.ws && this.ws.readyState !== this.ws.OPEN;
-    if (!isDisconnected) {
-      this.ws.ping();
+    const isDisconnected = this.client && this.client.readyState !== WebSocket.OPEN;
+    if (!isDisconnected && this.client) {
+      this.client.ping();
     }
   }
 
   isAlive() {
     const now = new Date().getTime();
-    return now - this.lastSeen < 5000 && this.ws.readyState !== this.ws.CLOSED;
+    return now - this.lastSeen < 5000 && this.client && this.client.readyState !== WebSocket.CLOSED;
   }
 
   handlePong() {
@@ -206,16 +210,18 @@ export class PixelBlazeController {
 
   sendFrame(o) {
     const frame = JSON.stringify(o);
-    const isDisconnected = this.ws && this.ws.readyState !== this.ws.OPEN;
+    const isDisconnected = this.client && this.client.readyState !== this.client.OPEN;
+
     this.log.debug(
       isDisconnected
         ? 'wanted to send'
-        : 'sending to ' + this.props.id + ' at ' + this.props.address,
+        : `sending to ${this.props.id} at ${this.props.address}`,
       frame,
     );
-    if (isDisconnected) {
+
+    if (isDisconnected || !this.client) {
       return;
     }
-    this.ws.send(frame);
+    this.client.send(frame);
   }
 }
