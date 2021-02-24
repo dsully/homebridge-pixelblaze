@@ -12,6 +12,13 @@ export default class PixelBlazePlatformAccessory {
   private refresh = 5.0;
   private hasAccessoryInfo;
 
+  private state = {
+    hue: 0,
+    saturation: 0,
+    brightness: 0,
+    pattern: 0,
+  };
+
   constructor(
     private readonly platform: PixelBlazePlatform,
     private readonly accessory: PlatformAccessory,
@@ -41,6 +48,15 @@ export default class PixelBlazePlatformAccessory {
     this.service.getCharacteristic(this.platform.Characteristic.Brightness)
       .on('set', this.setBrightness.bind(this));       // SET - bind to the 'setBrightness` method below
 
+    this.service
+      .getCharacteristic(this.platform.Characteristic.Hue)
+      .on('set', this.setHue.bind(this));
+    //  .on('get', this.getHue.bind(this))
+
+    this.service
+      .getCharacteristic(this.platform.Characteristic.Saturation)
+      .on('set', this.setSaturation.bind(this));
+    // .on('get', this.getSaturation.bind(this))
 
     setInterval(() => {
       this.device.reload();
@@ -71,8 +87,8 @@ export default class PixelBlazePlatformAccessory {
    */
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
 
-    this.device.setCommand({brightness: value ? 1.0 : 0.0 });
-    this.platform.log.debug('Set Characteristic On ->', value);
+    this.state.brightness = value ? 1.0 : 0.0;
+    this.platform.log.debug('Set Characteristic On ->', this.state.brightness);
 
     callback(null);
   }
@@ -83,6 +99,7 @@ export default class PixelBlazePlatformAccessory {
    */
   setBrightness(value: CharacteristicValue, callback: CharacteristicSetCallback) {
 
+    this.state.brightness = (value as number) / 100;
     this.device.setCommand({brightness: (value as number) / 100});
 
     this.platform.log.debug('Set Characteristic Brightness -> ', value);
@@ -91,18 +108,30 @@ export default class PixelBlazePlatformAccessory {
     callback(null);
   }
 
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, changing the Brightness
-   */
-  setBrightness(value: CharacteristicValue, callback: CharacteristicSetCallback) {
+  getHue(callback: CharacteristicSetCallback) {
+    this.device.setCommand({getVars: true});
+    callback(null);
+  }
 
-    // implement your own code to set the brightness
-    this.exampleStates.Brightness = value as number;
+  setHue(value: CharacteristicValue, callback: CharacteristicSetCallback) {
 
-    this.platform.log.debug('Set Characteristic Brightness -> ', value);
+    this.state.hue = Math.round(((value as number / 360) + Number.EPSILON) * 100) / 100;
+    this.platform.log.debug('Set Characteristic Hue -> ', this.state.hue);
+    this.device.setCommand({setVars: {hue: this.state.hue}});
 
-    // you must call the callback function
+    callback(null);
+  }
+
+  getSaturation(callback: CharacteristicSetCallback) {
+    this.device.setCommand({getVars: true});
+    callback(null);
+  }
+
+  setSaturation(value: CharacteristicValue, callback: CharacteristicSetCallback) {
+
+    this.state.saturation = Math.round(((value as number / 100) + Number.EPSILON) * 100) / 100;
+    this.platform.log.debug('Set Characteristic Saturation -> ', this.state.saturation);
+    this.device.setCommand({setVars: {saturation: this.state.saturation}});
     callback(null);
   }
 
