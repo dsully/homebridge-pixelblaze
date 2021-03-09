@@ -1,11 +1,11 @@
 import { API } from 'homebridge';
 
 import { PLATFORM_NAME } from './settings';
-import PixelBlazePlatform from './platform';
+import PixelblazePlatform from './platform';
 
 /**
  * This method registers the platform with Homebridge
  */
 export = (api: API) => {
-  api.registerPlatform(PLATFORM_NAME, PixelBlazePlatform);
+  api.registerPlatform(PLATFORM_NAME, PixelblazePlatform);
 };

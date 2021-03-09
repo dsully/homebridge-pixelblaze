@@ -1,9 +1,8 @@
 {
-  "private": true,
-  "displayName": "HomeBridge PixelBlaze",
+  "displayName": "HomeBridge Pixelblaze",
   "name": "homebridge-pixelblaze",
   "version": "1.0.0",
-  "description": "A Homebridge plugin for the PixelBlaze LED Controller.",
+  "description": "A Homebridge plugin for the Pixelblaze LED Controller.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

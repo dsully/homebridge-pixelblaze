@@ -1,3 +1,6 @@
+// Most of this code is directly from https://github.com/simap/Firestorm
+// Which is unlicensed.
+
 import type { Logger } from 'homebridge';
 
 import WebSocket = require('ws');
@@ -111,7 +114,7 @@ export default class PixelBlazeController {
 
     if (typeof msg === 'string') {
 
-      this.log.debug(`data from ${this.props.id} at ${this.props.address}`, typeof msg, msg);
+      // this.log.debug(`data from ${this.props.id} at ${this.props.address}`, typeof msg, msg);
 
       try {
         _.assign(this.props, _.pick(JSON.parse(msg), PROPFIELDS));

@@ -1,8 +1,8 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import PixelBlazePlatformAccessory from './platformAccessory';
-import PixelBlazeController from './lib/controller';
+import PixelblazePlatformAccessory from './platformAccessory';
+import PixelblazeController from './lib/controller';
 import discover from './lib/discovery';
 import Characteristics from './characteristics';
 
@@ -11,7 +11,7 @@ import Characteristics from './characteristics';
  * This class is the main constructor for your plugin, this is where you should
  * parse the user config and discover/register accessories with Homebridge.
  */
-export default class PixelBlazePlatform implements DynamicPlatformPlugin {
+export default class PixelblazePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
 
@@ -52,7 +52,7 @@ export default class PixelBlazePlatform implements DynamicPlatformPlugin {
    * Accessories must only be registered once, previously created accessories
    * must not be registered again to prevent "duplicate UUID" errors.
    */
-  registerController(controller: PixelBlazeController) {
+  registerController(controller: PixelblazeController) {
 
     // generate a unique id for the accessory this should be generated from
     // something globally unique, but constant, for example, the device serial
@@ -73,7 +73,7 @@ export default class PixelBlazePlatform implements DynamicPlatformPlugin {
 
       // create the accessory handler for the restored accessory
       // this is imported from `platformAccessory.ts`
-      new PixelBlazePlatformAccessory(this, existingAccessory, controller);
+      new PixelblazePlatformAccessory(this, existingAccessory, controller);
 
       // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
       // remove platform accessories when no longer present
@@ -92,7 +92,7 @@ export default class PixelBlazePlatform implements DynamicPlatformPlugin {
 
       // create the accessory handler for the newly create accessory
       // this is imported from `platformAccessory.ts`
-      new PixelBlazePlatformAccessory(this, accessory, controller);
+      new PixelblazePlatformAccessory(this, accessory, controller);
 
       // link the accessory to your platform
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

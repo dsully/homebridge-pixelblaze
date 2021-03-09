@@ -1,4 +1,4 @@
-import PixelBlazeController from './controller';
+import PixelblazeController from './controller';
 
 import type { Logger } from 'homebridge';
 import * as udp from 'dgram';
@@ -11,11 +11,11 @@ const PacketTypes = {
 };
 
 /**
- * Try to find a PixelBlaze controller on the network.
+ * Try to find a Pixelblaze controller on the network.
  * @param log 
  * @param foundControllerCallback
  */
-export default function discover(log: Logger, foundControllerCallback: (controller: PixelBlazeController) => void) {
+export default function discover(log: Logger, foundControllerCallback: (controller: PixelblazeController) => void) {
 
   const discoveryFunction = () => {
 
@@ -62,7 +62,7 @@ export default function discover(log: Logger, foundControllerCallback: (controll
 
           if (!record.controller) {
 
-            record.controller = new PixelBlazeController({
+            record.controller = new PixelblazeController({
               id: header.senderId,
               address: remote.address,
             }, log);
@@ -114,7 +114,7 @@ export default function discover(log: Logger, foundControllerCallback: (controll
   const broadcastIntervalId = setInterval(discoveryFunction, 15 * 1000);
 
   // But start immediately.
-  log.info('Searching for PixelBlaze controllers...');
+  log.info('Searching for Pixelblaze controllers...');
 
   discoveryFunction();
 }
