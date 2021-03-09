@@ -37,6 +37,7 @@ const PROPFIELDS = [
   'sequencerEnable',
   'brightness',
   'name',
+  'vars',
 ];
 
 export default class PixelBlazeController {
@@ -208,7 +209,7 @@ export default class PixelBlazeController {
   }
 
   reload() {
-    this.sendFrame({ getConfig: true, listPrograms: true });
+    this.sendFrame({ getConfig: true, getVars: true, listPrograms: true });
   }
 
   sendFrame(o) {

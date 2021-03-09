@@ -75,6 +75,18 @@ export default class PixelblazePlatformAccessory {
 
           this.service.getCharacteristic(LightPattern).props.maxValue = this.device.props.programList.length - 1;
         }
+
+        if (this.device.props.vars) {
+
+          if (this.device.props.vars.hue !== null) {
+            this.state.hue = this.device.props.vars.hue as number;
+          }
+
+          if (this.device.props.vars.saturation !== null) {
+            this.state.saturation = this.device.props.vars.saturation as number;
+          }
+
+        }
       }
 
     }, this.refresh * 1000);
@@ -147,14 +159,12 @@ export default class PixelblazePlatformAccessory {
     callback(null);
   }
 
-  // TODO: Implement getHue & getSaturation via a 'getVars' query.
-
   // Update HomeKit's state. Since Pixelblaze users can modify the state out of band with the WebUI or Firestorm.
   updateHomeKit() {
 
     this.service.updateCharacteristic(this.platform.Characteristic.On, (this.state.brightness > 0) as boolean);
-    this.service.updateCharacteristic(this.platform.Characteristic.Hue, this.state.hue);
-    this.service.updateCharacteristic(this.platform.Characteristic.Saturation, this.state.saturation);
+    this.service.updateCharacteristic(this.platform.Characteristic.Hue, Math.round(this.state.hue * 360));
+    this.service.updateCharacteristic(this.platform.Characteristic.Saturation, Math.round(this.state.saturation * 100));
   }
 
 }
