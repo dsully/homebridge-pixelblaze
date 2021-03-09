@@ -32,6 +32,7 @@ export default class PixelblazePlatform implements DynamicPlatformPlugin {
       log.debug('Executed didFinishLaunching callback');
       // run the method to discover / register your devices as accessories
       discover(this.log, this.registerController.bind(this));
+
     });
   }
 

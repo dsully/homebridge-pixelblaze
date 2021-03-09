@@ -42,7 +42,3 @@ To add this plugin to your Homebridge configuration:
       }
   ]
 ```
-
-TODO:
-
-* Add a UINT8 custom characaristic for selecting patterns in 3rd party apps like Eve.

@@ -1,5 +1,6 @@
 import { Service, PlatformAccessory, CharacteristicValue, CharacteristicSetCallback } from 'homebridge';
 import PixelblazeController from './lib/controller';
+import LightPattern from './lib/patterns';
 import PixelblazePlatform from './platform';
 
 /**
@@ -10,7 +11,6 @@ import PixelblazePlatform from './platform';
 export default class PixelblazePlatformAccessory {
   private service: Service;
   private refresh = 5.0;
-  private hasAccessoryInfo;
 
   private state = {
     hue: 0,
@@ -55,6 +55,13 @@ export default class PixelblazePlatformAccessory {
       .getCharacteristic(this.platform.Characteristic.Saturation)
       .on('set', this.setSaturation.bind(this));
 
+    if (!this.service.getCharacteristic(LightPattern)) {
+      this.service.addCharacteristic(LightPattern);
+    }
+
+    this.service.getCharacteristic(LightPattern)
+      .on('set', this.setPattern.bind(this));
+
     // Check the Pixelblaze state to keep it in sync.
     setInterval(() => {
       this.device.reload();
@@ -62,12 +69,18 @@ export default class PixelblazePlatformAccessory {
       if (this.device.props) {
         this.state.brightness = parseFloat(this.device.props.brightness);
         this.updateHomeKit();
+
+        if (this.device.props.programList) {
+          // this.platform.log.debug('Total programs: ' + this.device.props.programList.length);
+
+          this.service.getCharacteristic(LightPattern).props.maxValue = this.device.props.programList.length - 1;
+        }
       }
 
     }, this.refresh * 1000);
 
     // Update the serial number asynchronously, as we may not have it upon accessory creation.
-    this.hasAccessoryInfo = setInterval(() => {
+    const hasAccessoryInfo = setInterval(() => {
 
       if (this.device.props && this.device.props.name) {
         const serial = this.device.props.name.split('_')[1];
@@ -78,7 +91,7 @@ export default class PixelblazePlatformAccessory {
           .setCharacteristic(this.platform.Characteristic.SerialNumber, serial)
           .setCharacteristic(this.platform.Characteristic.FirmwareRevision, this.device.props.ver);
 
-        clearInterval(this.hasAccessoryInfo);
+        clearInterval(hasAccessoryInfo);
       }
 
     }, this.refresh * 1000);
@@ -123,6 +136,14 @@ export default class PixelblazePlatformAccessory {
     this.device.setCommand({setVars: {saturation: this.state.saturation}});
 
     this.updateHomeKit();
+    callback(null);
+  }
+
+  setPattern(value: CharacteristicValue, callback: CharacteristicSetCallback) {
+
+    this.platform.log.debug('Set Characteristic Pattern -> ', value);
+    this.device.setCommand({activeProgramId: this.device.props.programList[value as number]['id']});
+
     callback(null);
   }
 
