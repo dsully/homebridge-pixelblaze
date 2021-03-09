@@ -4,7 +4,6 @@ import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import PixelblazePlatformAccessory from './platformAccessory';
 import PixelblazeController from './lib/controller';
 import discover from './lib/discovery';
-import Characteristics from './characteristics';
 
 /**
  * HomebridgePlatform
