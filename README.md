@@ -38,7 +38,8 @@ To add this plugin to your Homebridge configuration:
   "platforms": [
       {
           "name": "Pixelblaze",
-          "platform": "Pixelblaze"
+          "platform": "Pixelblaze",
+          "colorpicker": "<Set the hsvPicker program ID here>"
       }
   ]
 ```

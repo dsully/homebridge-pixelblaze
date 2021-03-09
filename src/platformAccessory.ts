@@ -100,6 +100,7 @@ export default class PixelblazePlatformAccessory {
         this.platform.log.debug(`Found serial: ${serial} and firmware: ${this.device.props.ver}`);
 
         this.accessory.getService(this.platform.Service.AccessoryInformation)!
+          .setCharacteristic(this.platform.Characteristic.Name, this.device.props.name)
           .setCharacteristic(this.platform.Characteristic.SerialNumber, serial)
           .setCharacteristic(this.platform.Characteristic.FirmwareRevision, this.device.props.ver);
 
@@ -115,6 +116,11 @@ export default class PixelblazePlatformAccessory {
     this.platform.log.debug('Set Characteristic On ->', value);
     this.state.brightness = value as boolean ? 1.0 : 0.0;
     this.device.setCommand({brightness: this.state.brightness});
+
+    // When powered on, set to the colorpicker / architectural mode as defined in config.
+    if (value && this.platform.config.colorpicker) {
+      this.device.setCommand({activeProgramId: this.platform.config.colorpicker});
+    }
 
     this.updateHomeKit();
     callback(null);
