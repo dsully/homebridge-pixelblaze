@@ -9,7 +9,7 @@
                 "title": "Name",
                 "type": "string",
                 "required": true,
-                "default": "Pixelblaze Platform"
+                "default": "Pixelblaze"
             },
             "colorpicker": {
                 "title": "Color Picker Program ID",

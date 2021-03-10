@@ -1,7 +1,7 @@
 {
   "displayName": "HomeBridge Pixelblaze",
   "name": "homebridge-pixelblaze",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A Homebridge plugin for the Pixelblaze LED Controller.",
   "license": "Apache-2.0",
   "repository": {

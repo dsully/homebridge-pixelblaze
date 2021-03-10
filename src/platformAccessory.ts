@@ -1,6 +1,6 @@
 import { Service, PlatformAccessory, CharacteristicValue, CharacteristicSetCallback } from 'homebridge';
 import PixelblazeController from './lib/controller';
-import LightPattern from './lib/patterns';
+import CustomCharacteristic from './lib/patterns';
 import PixelblazePlatform from './platform';
 
 /**
@@ -54,6 +54,9 @@ export default class PixelblazePlatformAccessory {
     this.service
       .getCharacteristic(this.platform.Characteristic.Saturation)
       .on('set', this.setSaturation.bind(this));
+
+    // Pull in the dynamically created Characteristic subclass.
+    const LightPattern = CustomCharacteristic(this.platform.Characteristic).LightPattern;
 
     if (!this.service.getCharacteristic(LightPattern)) {
       this.service.addCharacteristic(LightPattern);
